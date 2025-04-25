@@ -4,7 +4,7 @@
 
 ## Introduction
 
-Welcome to the Language Course Enrollment Platform, a Laravel-based web application designed to simplify the process of enrolling in language courses. This platform provides users with a seamless experience to browse, compare, and enroll in language courses with ease. The project aims to enhance accessibility and user satisfaction by offering a modern, responsive, and user-friendly interface. Whether you're looking to improve your language skills or explore new ones, this platform ensures a hassle-free journey.
+Welcome to the Language Course Enrollment Platform, a Laravel-based web application designed to simplify the process of enrolling in language courses. This platform provides users with a seamless experience to browse, compare, and enroll in language courses with ease. The project aims to enhance accessibility and user satisfaction by offering a modern, responsive, and user-friendly interface. Whether you're looking to improve language skills or explore new ones, this platform ensures a hassle-free journey.
 
 ---
 
