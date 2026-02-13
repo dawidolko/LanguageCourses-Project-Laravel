@@ -4,11 +4,13 @@ namespace App\Providers;
 
 use App\Http\View\Composers\CategoryComposer;
 use App\Models\Category;
+use App\Models\Course;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View as ViewFacade;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('is-admin', function ($user) {
             return $user->role_id == 1;
+        });
+
+        // Przekazuj kursy do wszystkich widoków
+        ViewFacade::composer('*', function ($view) {
+            $view->with('courses', Course::all());
         });
     }
 }

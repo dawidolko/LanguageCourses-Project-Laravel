@@ -8,7 +8,65 @@ Welcome to the **Language Course Enrollment Platform** repository! This Laravel-
 
 This project demonstrates best practices in Laravel development, including Eloquent ORM, Blade templating, RESTful API design, and secure payment gateway integration. Whether students are looking to improve language skills or explore new ones, this platform ensures a hassle-free and engaging learning journey.
 
-## 📁 Repository Structure
+## � Quick Start with Docker (Recommended)
+
+The easiest way to run this project is using Docker. Everything is automated!
+
+### Prerequisites
+
+- Docker Desktop or Docker Engine
+- Docker Compose
+
+### One-Command Setup
+
+```bash
+cd .tools/docker
+docker compose up -d --build
+```
+
+That's it! 🎉 The setup automatically:
+
+- ✅ Installs all PHP dependencies (Composer)
+- ✅ Installs all Node.js dependencies (NPM)
+- ✅ Builds frontend assets
+- ✅ Generates application key
+- ✅ Runs database migrations
+- ✅ Seeds database with test data
+- ✅ Generates course images
+- ✅ Sets appropriate permissions
+
+### Access Points
+
+After starting Docker containers:
+
+- **Application**: http://localhost:8001
+- **phpMyAdmin**: http://localhost:8081
+    - Server: `db`
+    - Username: `languagecourses`
+    - Password: `secret`
+
+### Docker Management Commands
+
+```bash
+# Stop containers
+docker compose down
+
+# View logs
+docker compose logs -f app
+
+# Restart containers
+docker compose restart
+
+# Rebuild from scratch
+docker compose down -v
+docker compose up -d --build
+```
+
+For more Docker commands and troubleshooting, see [Docker Documentation](.tools/docker/README.md).
+
+---
+
+## �📁 Repository Structure
 
 ```
 
@@ -41,14 +99,20 @@ Language-Course-Enrollment-Platform/
 
 ## 🚀 Getting Started
 
-### 1. Clone the Repository
+### Option 1: Docker (Recommended) 🐳
+
+See the [Quick Start with Docker](#-quick-start-with-docker-recommended) section above.
+
+### Option 2: Manual Installation
+
+#### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/dawidolko/Language-Course-Enrollment-Platform.git
 cd Language-Course-Enrollment-Platform
 ```
 
-### 2. Install Dependencies
+#### 2. Install Dependencies
 
 ```bash
 # Install PHP dependencies
@@ -58,7 +122,7 @@ composer install
 npm install
 ```
 
-### 3. Environment Configuration
+#### 3. Environment Configuration
 
 ```bash
 # Create environment file
@@ -70,7 +134,7 @@ php artisan key:generate
 # Configure your database and payment gateway settings in .env file
 ```
 
-### 4. Database Setup
+#### 4. Database Setup
 
 ```bash
 # Run database migrations
@@ -80,7 +144,7 @@ php artisan migrate
 php artisan db:seed
 ```
 
-### 5. Compile Assets
+#### 5. Compile Assets
 
 ```bash
 # Compile frontend assets
@@ -90,7 +154,7 @@ npm run dev
 npm run build
 ```
 
-### 6. Start Development Server
+#### 6. Start Development Server
 
 ```bash
 # Start Laravel development server
