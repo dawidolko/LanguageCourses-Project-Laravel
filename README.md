@@ -1,4 +1,4 @@
-# Language-Course-Enrollment-Platform 
+# Language-Course-Enrollment-Platform
 
 > 🚀 **Modern Language Learning Platform** - Build comprehensive course enrollment systems with Laravel, secure payments, and responsive design
 
