@@ -10,7 +10,10 @@ if [ ! -f "/var/www/html/.env" ]; then
 fi
 
 # Instalacja zależności Composer
-if [ ! -d "/var/www/html/vendor" ]; then
+# Sprawdzamy `autoload.php`, nie sam katalog: przerwana instalacja zostawia
+# pusty `vendor/`, ktory przechodzil ten warunek jako "gotowe" — artisan
+# wywalal sie potem na brakujacym autoloaderze i kontener restartowal w kolko.
+if [ ! -f "/var/www/html/vendor/autoload.php" ]; then
     echo "📦 Instalacja zależności PHP (Composer)..."
     composer install --no-interaction --optimize-autoloader
 else
@@ -18,7 +21,7 @@ else
 fi
 
 # Instalacja zależności NPM i budowanie assets
-if [ ! -d "/var/www/html/node_modules" ]; then
+if [ ! -d "/var/www/html/node_modules/vite" ]; then
     echo "📦 Instalacja zależności Node.js..."
     npm install
     echo "🔨 Budowanie assets..."
