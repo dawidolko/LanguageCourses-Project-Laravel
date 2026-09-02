@@ -1,101 +1,131 @@
 @include('layouts.html')
 
-@include('layouts.head', ['pageTitle' => 'languageCourses - Rejestracja'])
-<head>
-    <style>
-        .marginbig {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 81vh;
-        }
-        .custom-btn {
-            background-color: gray;
-            color: black;
-            border: none;  
-        }
-        .custom-btn:hover {
-            background-color: lightgreen;
-            color: white;
-        }
-    </style>
-</head>
+@include('layouts.head', [
+    'pageTitle' => 'Rejestracja - languageCourses',
+    'metaDescription' => 'Załóż darmowe konto w languageCourses i zapisz się na kurs językowy prowadzony przez doświadczonego lektora.',
+    'robots' => 'noindex, nofollow',
+])
 
 <body>
-    @include('layouts.navbar')
-    @include('layouts.session-error')
-    
-    <div class="container mt-5 mb-5 marginbig">
-        <div class="row mt-4 mb-4 text-center">
-            <div class="col-12">
-                <img src="{{ asset('storage/img/logo.png') }}" alt="Logo" class="img-fluid" style="max-width: 150px; margin-bottom: 20px; border-radius: 50">
-                <h1>Zarejestruj się</h1>
-            </div>
-        </div>
-    
-        @include('layouts.validation-error')
-    
-        <div class="row d-flex justify-content-center">
-            <div class="col-10 col-sm-10 col-md-6 col-lg-4">
-                <form method="POST" action="{{ route('register') }}" class="needs-validation" novalidate>
+@include('layouts.navbar')
+
+<main id="main-content">
+    <div class="lc-shell">
+        <div class="lc-auth">
+            <div class="lc-auth-card">
+                <div class="lc-auth-head">
+                    <img src="{{ asset('storage/img/logo.png') }}" alt="Logo languageCourses">
+                    <h1>Zarejestruj się</h1>
+                    <p>Załóż konto, aby zapisywać się na kursy i wybierać terminy zajęć.</p>
+                </div>
+
+                @include('layouts.session-error')
+                @include('layouts.validation-error')
+
+                <form method="POST" action="{{ route('register') }}" id="registerForm" novalidate>
                     @csrf
-                    <div class="form-group mb-2">
-                        <label for="name" class="form-label">Imię i nazwisko</label>
-                        <input id="name" name="name" type="text" class="form-control @error('first_name') is-invalid @enderror" value="{{ old('first_name') }}" required>
-                        @error('first_name')
-                            <div class="invalid-feedback">{{ $message }}</div>
+
+                    {{-- The controller validates the "name" field, so the error
+                         binding here must use "name" as well. --}}
+                    <div class="lc-field">
+                        <label for="name">Imię i nazwisko</label>
+                        <input id="name" name="name" type="text" autocomplete="name"
+                               class="form-control @error('name') is-invalid @enderror"
+                               value="{{ old('name') }}" required
+                               @error('name') aria-invalid="true" aria-describedby="name-error" @enderror>
+                        @error('name')
+                            <span class="invalid-feedback" id="name-error">{{ $message }}</span>
                         @enderror
                     </div>
-                    <div class="form-group mb-2">
-                        <label for="email" class="form-label">Email</label>
-                        <input id="email" name="email" type="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" required>
+
+                    <div class="lc-field">
+                        <label for="email">Adres e-mail</label>
+                        <input id="email" name="email" type="email" autocomplete="email"
+                               class="form-control @error('email') is-invalid @enderror"
+                               value="{{ old('email') }}" required
+                               @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
                         @error('email')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <span class="invalid-feedback" id="email-error">{{ $message }}</span>
                         @enderror
                     </div>
-                    <div class="form-group mb-2">
-                        <label for="password" class="form-label">Hasło</label>
-                        <input id="password" name="password" type="password" class="form-control @error('password') is-invalid @enderror" required>
+
+                    <div class="lc-field">
+                        <label for="password">Hasło</label>
+                        <input id="password" name="password" type="password" autocomplete="new-password"
+                               class="form-control @error('password') is-invalid @enderror" required
+                               aria-describedby="password-hint @error('password') password-error @enderror">
+                        {{-- Stating the rules up front (WCAG 3.3.2) rather than
+                             only failing after submit. --}}
+                        <span class="lc-hint" id="password-hint">
+                            Minimum 8 znaków, w tym mała i wielka litera, cyfra oraz znak specjalny (@$!%*#?&).
+                        </span>
                         @error('password')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <span class="invalid-feedback" id="password-error">{{ $message }}</span>
                         @enderror
                     </div>
-                    <div class="form-group mb-2">
-                        <label for="password_confirmation" class="form-label">Potwierdź hasło</label>
-                        <input id="password_confirmation" name="password_confirmation" type="password" class="form-control" required>
+
+                    <div class="lc-field">
+                        <label for="password_confirmation">Potwierdź hasło</label>
+                        <input id="password_confirmation" name="password_confirmation" type="password"
+                               autocomplete="new-password" class="form-control" required
+                               aria-describedby="password-confirmation-hint">
+                        <span class="lc-hint" id="password-confirmation-hint">Wpisz ponownie to samo hasło.</span>
                     </div>
-                    <div class="text-center mt-4 mb-4">
-                        <button class="btn custom-btn" type="submit">Zarejestruj</button>
-                    </div>
+
+                    <button class="btn custom-btn" type="submit">Zarejestruj się</button>
                 </form>
+
+                <p class="lc-auth-foot">
+                    Masz już konto? <a href="{{ route('login') }}">Zaloguj się</a>
+                </p>
             </div>
         </div>
     </div>
+</main>
 
 @include('layouts.footer', ['fixedBottom' => false])
+
 <script>
+    // Confirm the two password fields match before the round trip. The message
+    // is rendered as text next to the field, not just as a red border.
     document.addEventListener('DOMContentLoaded', function () {
-        const form = document.querySelector('form.needs-validation');
+        var form = document.getElementById('registerForm');
+        if (!form) {
+            return;
+        }
+
+        var password = document.getElementById('password');
+        var confirmation = document.getElementById('password_confirmation');
+        var errorId = 'password-confirmation-error';
+
         form.addEventListener('submit', function (event) {
-            const password = document.getElementById('password');
-            const passwordConfirm = document.getElementById('password_confirmation');
-            let valid = true;
-    
-            if (password.value !== passwordConfirm.value) {
-                passwordConfirm.setCustomValidity('Hasła nie są identyczne.');
-                valid = false;
-            } else {
-                passwordConfirm.setCustomValidity('');
-            }
-    
-            if (!valid) {
+            var existing = document.getElementById(errorId);
+
+            if (password.value !== confirmation.value) {
                 event.preventDefault();
-                event.stopPropagation();
+
+                if (!existing) {
+                    existing = document.createElement('span');
+                    existing.className = 'invalid-feedback';
+                    existing.id = errorId;
+                    confirmation.insertAdjacentElement('afterend', existing);
+                }
+                existing.textContent = 'Hasła nie są identyczne.';
+
+                confirmation.classList.add('is-invalid');
+                confirmation.setAttribute('aria-invalid', 'true');
+                confirmation.setAttribute('aria-describedby', 'password-confirmation-hint ' + errorId);
+                confirmation.focus();
+            } else {
+                confirmation.classList.remove('is-invalid');
+                confirmation.removeAttribute('aria-invalid');
+                confirmation.setAttribute('aria-describedby', 'password-confirmation-hint');
+                if (existing) {
+                    existing.remove();
+                }
             }
-            form.classList.add('was-validated');
         });
     });
 </script>
-    
 </body>
 </html>

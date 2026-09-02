@@ -1,70 +1,177 @@
 @include('layouts.html')
 
-@include('layouts.head', ['pageTitle' => 'languageCourses - '.$course->name])
-<head>
-    <link rel="stylesheet" href="{{ asset('css/courseStyle.css') }}" />
-</head>
+@php
+    $courseUrl = route('courses.show', ['id' => $course->id]);
+
+    $showJsonLd = [
+        [
+            '@context' => 'https://schema.org',
+            '@type' => 'Course',
+            'name' => $course->name,
+            'description' => $course->description,
+            'url' => $courseUrl,
+            'image' => asset('storage/img/' . $course->path),
+            'inLanguage' => $course->language,
+            'teaches' => $course->language,
+            'provider' => [
+                '@type' => 'EducationalOrganization',
+                'name' => 'languageCourses',
+                'url' => route('home'),
+            ],
+            'hasCourseInstance' => [
+                '@type' => 'CourseInstance',
+                'courseMode' => 'online',
+                'courseWorkload' => 'P6M',
+                'instructor' => $teacher ? [
+                    '@type' => 'Person',
+                    'name' => $teacher->name,
+                ] : null,
+            ],
+            'syllabusSections' => $lessons->values()->map(fn ($lesson, $i) => [
+                '@type' => 'Syllabus',
+                'position' => $i + 1,
+                'name' => $lesson->title,
+                'description' => $lesson->description,
+            ])->all(),
+        ],
+        [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Strona główna', 'item' => route('home')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Kursy', 'item' => route('courses.index')],
+                ['@type' => 'ListItem', 'position' => 3, 'name' => $course->name, 'item' => $courseUrl],
+            ],
+        ],
+    ];
+
+    // Trim the description into a meta-length summary without cutting mid-word.
+    $courseSummary = $course->description
+        ? Str::limit(strip_tags($course->description), 155)
+        : 'Kurs ' . $course->name . ' (' . $course->language . ') w languageCourses. Sprawdź plan lekcji, poznaj lektora i zapisz się online.';
+@endphp
+
+@include('layouts.head', [
+    'pageTitle' => $course->name . ' - kurs ' . $course->language . ' | languageCourses',
+    'metaDescription' => $courseSummary,
+    'metaImage' => 'storage/img/' . $course->path,
+    'jsonLd' => $showJsonLd,
+])
+
 <body>
     @include('layouts.navbar')
 
-    <div class="produkt new-conti category-section container">
-        <div class="product-main">
-            <div class="product-grid">
-                <div class="showcase">
-                    <div class="slider showcase-banner">
-                        <img src="{{ asset('storage/img/' . $course->path) }}" alt="{{ $course->language }}" width="300" class="product-img hover" />
-                        <img src="{{ asset('storage/img/' . $course->path) }}" alt="{{ $course->language }}" width="300" class="product-img default" />
+    <main id="main-content">
+        <div class="lc-shell">
+            @include('layouts.breadcrumbs', ['crumbs' => [
+                ['label' => 'Kursy', 'url' => route('courses.index')],
+                ['label' => $course->name],
+            ]])
+
+            @include('layouts.session-error')
+
+            <div class="lc-course-layout">
+                {{-- MAIN COLUMN --------------------------------------------- --}}
+                <div>
+                    <p class="lc-eyebrow">{{ $course->language }}</p>
+                    <h1>{{ $course->name }}</h1>
+
+                    <figure class="lc-course-figure">
+                        <img src="{{ asset('storage/img/' . $course->path) }}"
+                             alt="Materiały kursu {{ $course->name }}">
+                    </figure>
+
+                    <div class="lc-prose">
+                        <h2>Opis kursu</h2>
+                        <p>{{ $course->description }}</p>
+
+                        <h2 id="plan-lekcji">Plan lekcji</h2>
+                        @if ($lessons->isEmpty())
+                            <div class="lc-empty">
+                                <h3>Plan lekcji w przygotowaniu</h3>
+                                <p>Szczegółowy program tego kursu pojawi się wkrótce. W razie pytań napisz do prowadzącego.</p>
+                            </div>
+                        @else
+                            <p>Kurs obejmuje {{ $lessons->count() }} {{ $lessons->count() === 1 ? 'lekcję' : 'lekcji' }}.</p>
+                            <ol class="lc-lesson-list">
+                                @foreach ($lessons as $lesson)
+                                    <li>
+                                        <div>
+                                            <strong>{{ $lesson->title }}</strong>
+                                            @if ($lesson->description)
+                                                <p>{{ $lesson->description }}</p>
+                                            @endif
+                                        </div>
+                                    </li>
+                                @endforeach
+                            </ol>
+                        @endif
                     </div>
-                    <div class="showcase-content">
-                        <div class="caseBox-info">
-                            <div class="caseBox1">
-                                <a style="text-align: center;" href="{{ route('courses.show', ['id' => $course->id]) }}" class="showcase-category card-title text-danger2">{{ $course->language }}</a>
-                                <a href="{{ route('courses.show', ['id' => $course->id]) }}">
-                                    <h3 style="text-align: center;" class="showcase-title">{{ $course->name }}</h3>
-                                </a>
-                                <p>Dostępne lekcje dla kursu:</p>
-                                <ul>
-                                    @foreach ($lessons as $lesson)
-                                        <li>
-                                            <strong>{{ $lesson->title }}</strong>: {{ $lesson->description }}
-                                        </li>
-                                    @endforeach
-                                </ul>
-                                <hr />
-                                <h4 class="card-title" style="margin: 10px;">Opis</h4>
-                                <div class="product-description">{{ $course->description }}</div>
-                                <hr />
-                                <h4 class="card-title" style="margin: 10px;">Nauczyciel</h4>
-                                <div class="product-description">
-                                    <strong>Imię i nazwisko:</strong> {{ $teacher->name }}<br>
-                                    <strong>Email:</strong> {{ $teacher->email }}<br>
-                                    <strong>Telefon:</strong> {{ $teacher->phone }}
+                </div>
+
+                {{-- SIDEBAR: enrolment + facts ------------------------------- --}}
+                <div>
+                    <div class="lc-sidecard">
+                        <h2>Zapisz się na kurs</h2>
+
+                        <dl class="lc-facts">
+                            <div>
+                                <dt>Język</dt>
+                                <dd>{{ $course->language }}</dd>
+                            </div>
+                            <div>
+                                <dt>Liczba lekcji</dt>
+                                <dd>{{ $lessons->count() }}</dd>
+                            </div>
+                            <div>
+                                <dt>Forma zajęć</dt>
+                                <dd>Online</dd>
+                            </div>
+                            <div>
+                                <dt>Czas dostępu</dt>
+                                <dd>do 6 miesięcy</dd>
+                            </div>
+                        </dl>
+
+                        @if (Auth::check())
+                            <form action="{{ route('cart.add', ['course_id' => $course->id]) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn custom-btn">
+                                    Dodaj do koszyka
+                                    <span class="lc-visually-hidden">kurs {{ $course->name }}</span>
+                                </button>
+                            </form>
+                            <p class="lc-hint">Termin rozpoczęcia zajęć wybierzesz w koszyku.</p>
+                        @else
+                            <a href="{{ route('login') }}" class="btn custom-btn">
+                                Zaloguj się, aby się zapisać
+                                <span class="lc-visually-hidden">na kurs {{ $course->name }}</span>
+                            </a>
+                            <p class="lc-hint">
+                                Nie masz jeszcze konta?
+                                <a href="{{ route('register') }}">Zarejestruj się</a>.
+                            </p>
+                        @endif
+                    </div>
+
+                    @if ($teacher)
+                        <div class="lc-sidecard mt-4">
+                            <h2>Prowadzący</h2>
+                            <div class="lc-teacher">
+                                <div>
+                                    <p class="lc-teacher-name">{{ $teacher->name }}</p>
+                                    <p class="lc-meta-list mb-0">
+                                        <a href="mailto:{{ $teacher->email }}">{{ $teacher->email }}</a><br>
+                                        <a href="tel:{{ preg_replace('/\s+/', '', $teacher->phone) }}">{{ $teacher->phone }}</a>
+                                    </p>
                                 </div>
-                                <hr />
-                                <div class="cart-favorite">
-                                    <div class="login-btn">
-                                        @if (Auth::check())
-                                        <form action="{{ route('cart.add', ['course_id' => $course->id]) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn btn-block custom-btn">
-                                                <b>Dodaj do koszyka "{{ $course->name }}"</b>
-                                            </button>
-                                        </form>
-                                    @else
-                                        <a href="{{ route('login') }}" class="btn btn-block custom-btn">
-                                            <b>Zaloguj się, aby się zapisać "{{ $course->name }}"</b>
-                                        </a>
-                                    @endif                                    
-                                    </div>
-                                </div>
-                                <br>
                             </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     @include('layouts.footer', ['fixedBottom' => false])
 </body>

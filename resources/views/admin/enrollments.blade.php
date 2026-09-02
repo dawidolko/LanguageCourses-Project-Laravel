@@ -1,96 +1,99 @@
-@extends('layouts.html')
+@include('layouts.html')
 
-@include('layouts.head', ['pageTitle' => 'languageCourses - Admin Zapisy'])
-
-<head>
-    <style>
-        .container {
-            margin-top: 50px;
-        }
-        .table th, .table td {
-            padding: 15px;
-            vertical-align: middle;
-        }
-        .footer {
-            background-color: #f8f9fa;
-            text-align: center;
-            width: 100%;
-            padding: 10px;
-            position: absolute;
-            bottom: 0;
-        }
-        .main-content {
-            min-height: 90vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .content-wrap {
-            flex: 1;
-        }
-    </style>
-</head>
+@include('layouts.head', [
+    'pageTitle' => 'Zapisy - panel administratora | languageCourses',
+    'metaDescription' => 'Panel administratora: lista zapisów na kursy.',
+    'robots' => 'noindex, nofollow',
+])
 
 <body>
 @include('layouts.navbar')
 
-<div class="main-content">
-    <div class="content-wrap">
-        <div class="container mt-5">
-            <h1 class="text-center">Zapisy</h1>
+<main id="main-content">
+    <div class="lc-shell">
+        @include('layouts.breadcrumbs', ['crumbs' => [['label' => 'Panel administratora'], ['label' => 'Zapisy']]])
 
-            @if (session('success'))
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
-            @endif
+        <h1>Zapisy na kursy</h1>
 
-            @if (session('error'))
-                <div class="alert alert-danger">
-                    {{ session('error') }}
-                </div>
-            @endif
-            <div class="table-responsive"> 
-                <table class="table table-bordered">
+        @include('layouts.session-error')
+        @include('layouts.validation-error')
+
+        @if ($enrollments->isEmpty())
+            <div class="lc-empty">
+                <h2>Brak zapisów</h2>
+                <p>Nikt nie zapisał się jeszcze na żaden kurs.</p>
+                <a href="{{ route('admin.courses') }}" class="btn custom-btn">Przejdź do kursów</a>
+            </div>
+        @else
+            <div class="table-responsive">
+                <table class="table">
+                    <caption>Wszystkie zapisy na kursy wraz z datą zajęć i statusem.</caption>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Użytkownik</th>
-                            <th>Kurs</th>
-                            <th>Data lekcji</th>
-                            <th>Status</th>
-                            <th>Akcje</th>
+                            <th scope="col">ID</th>
+                            <th scope="col">Użytkownik</th>
+                            <th scope="col">Kurs</th>
+                            <th scope="col">Data lekcji</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Akcje</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($enrollments as $enrollment)
+                            @php
+                                $course = optional($enrollment->lessons->first())->course;
+                                $lessonDate = $enrollment->lesson_date
+                                    ? \Carbon\Carbon::parse($enrollment->lesson_date)
+                                    : null;
+                            @endphp
                             <tr>
-                                <td>{{ $enrollment->id }}</td>
-                                <td>{{ $enrollment->user->name }}</td>
-                                <td>{{ $enrollment->lessons->first()->course->name }}</td>
-                                <td>{{ \Carbon\Carbon::parse($enrollment->lesson_date)->format('Y-m-d') }}</td>
-                                <td>{{ $enrollment->status }}</td>
+                                <th scope="row">{{ $enrollment->id }}</th>
+                                <td>{{ $enrollment->user->name ?? 'Brak danych' }}</td>
+                                <td>{{ $course->name ?? 'Kurs niedostępny' }}</td>
                                 <td>
-                                    <a href="{{ route('admin.enrollments.edit', $enrollment->id) }}" class="btn btn-info btn-sm">Edytuj</a>
-                                    <form action="{{ route('admin.enrollments.delete', $enrollment->id) }}" method="POST" style="display:inline-block;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm">Usuń</button>
-                                    </form>
+                                    @if ($lessonDate)
+                                        <time datetime="{{ $lessonDate->toDateString() }}">
+                                            {{ $lessonDate->format('d.m.Y') }}
+                                        </time>
+                                    @else
+                                        Brak terminu
+                                    @endif
+                                </td>
+                                <td><span class="lc-status">{{ ucfirst($enrollment->status) }}</span></td>
+                                <td>
+                                    <div class="lc-row-actions">
+                                        <a href="{{ route('admin.enrollments.edit', $enrollment->id) }}"
+                                           class="btn btn-info btn-sm">
+                                            Edytuj
+                                            <span class="lc-visually-hidden">zapis numer {{ $enrollment->id }}</span>
+                                        </a>
+                                        <form action="{{ route('admin.enrollments.delete', $enrollment->id) }}"
+                                              method="POST">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Czy na pewno chcesz usunąć ten zapis?')">
+                                                Usuń
+                                                <span class="lc-visually-hidden">zapis numer {{ $enrollment->id }}</span>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
-            <div class="row">
-                <div class="col-12 d-flex justify-content-center">
-                    {{ $enrollments->links('pagination::bootstrap-4') }}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-@include('layouts.footer', ['fixedBottom' => true])
+            @if ($enrollments->hasPages())
+                <nav aria-label="Paginacja listy zapisów">
+                    {{ $enrollments->onEachSide(1)->withQueryString()->links('vendor.pagination.accessible') }}
+                </nav>
+            @endif
+        @endif
+    </div>
+</main>
+
+@include('layouts.footer', ['fixedBottom' => false])
 </body>
 </html>

@@ -1,49 +1,45 @@
 @include('layouts.html')
 
-@include('layouts.head', ['pageTitle' => 'languageCourses - 403'])
-<head>
-    <style>
-        html, body {
-            height: 100%; 
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column; 
-        }
+@include('layouts.head', [
+    'pageTitle' => '403 - Brak uprawnień | languageCourses',
+    'metaDescription' => 'Nie masz uprawnień do dostępu do tej strony. Jeśli uważasz, że to pomyłka, skontaktuj się z pomocą techniczną.',
+    // Error pages must never be indexed.
+    'robots' => 'noindex, follow',
+])
 
-        .container {
-            flex: 1; 
-            display: flex;
-            flex-direction: column; 
-            justify-content: center; 
-        }
-
-        .footer {
-            margin-top: auto;
-        }
-    </style>
-</head>
 <body>
 @include('layouts.navbar')
 
-<div class="container mt-5 mb-5">
-    <div class="row mt-4 mb-4 text-center card">
-        <h1 class="display-1 fw-bold">403</h1>
-        <h2>
-            @if (App::environment('local'))
-                {{ $exception->getMessage() ?: 'Nie masz uprawnień do dostępu do tej strony.' }}
-            @else
-                Nie masz uprawnień do dostępu do tej strony.
-            @endif
-        </h2>
-        <p>Jeśli uważasz, że to pomyłka, skontaktuj się z pomocą techniczną lub spróbuj <a href="{{ url('/') }}">wrócić na stronę główną</a>.</p>
+<main id="main-content">
+    <div class="lc-shell">
+        <div class="lc-error">
+            <div class="lc-error-inner">
+                {{-- The numeric code is decorative next to the heading text,
+                     so it is not announced twice. --}}
+                <p class="lc-error-code" aria-hidden="true">403</p>
+
+                <h1>Brak uprawnień</h1>
+
+                <p>Nie masz uprawnień do dostępu do tej strony. Jeśli uważasz, że to pomyłka, skontaktuj się z pomocą techniczną.</p>
+
+                <div class="lc-error-actions">
+                    <a href="{{ url('/') }}" class="btn custom-btn">Wróć na stronę główną</a>
+                    <a href="{{ route('courses.index') }}" class="btn lc-btn-secondary">Przeglądaj kursy</a>
+                </div>
+
+                {{-- In local development show the underlying message, which is
+                     useful while debugging but must never leak in production. --}}
+                @if (App::environment('local') && isset($exception) && $exception->getMessage())
+                    <details class="lc-error-detail">
+                        <summary>Szczegóły techniczne (tylko środowisko lokalne)</summary>
+                        <pre>{{ $exception->getMessage() }}</pre>
+                    </details>
+                @endif
+            </div>
+        </div>
     </div>
-    @include('layouts.validation-error')
-</div>
+</main>
 
 @include('layouts.footer', ['fixedBottom' => false])
-<script>
-    document.getElementById("navbar-user").remove();
-</script>
 </body>
 </html>

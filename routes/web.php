@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CoursesController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\UsersController;
 
 use App\Http\Middleware\IsAdmin;
@@ -15,6 +16,12 @@ Route::middleware([ShareDataToViews::class])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/regulamin', [HomeController::class, 'regulamin'])->name('regulamin');
+
+    // SEO endpoints. Kept outside the ShareDataToViews-dependent views because
+    // they return XML/text rather than Blade, but registered inside the group so
+    // they stay grouped with the rest of the public routes.
+    Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+    Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
 
     Route::get('/courses', [CoursesController::class, 'index'])->name('courses.index');
     Route::get('/courses/{id}', [CoursesController::class, 'show'])->name('courses.show');

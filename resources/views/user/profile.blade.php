@@ -1,158 +1,180 @@
 @include('layouts.html')
-@include('layouts.head', ['pageTitle' => 'languageCourses - Profil użytkownika'])
-<head>
-    <style>
-        .marginbig { display: flex; flex-direction: column; justify-content: center; height: 100vh; }
-        .custom-btn { background-color: gray; color: black; border: none; }
-        .custom-btn:hover { background-color: lightgreen; color: white; }
-        .full-height { min-height: 87vh; display: flex; flex-direction: column; justify-content: center; }
-        .text-large { font-size: 1.5em; text-align: center; }
-        .footer { margin-top: auto; }
-        .img-fluid { max-width: 100%; height: auto; }
-        .table th, .table td {
-            padding: 8px; 
-            text-align: center;
-            vertical-align: middle;
-        }
-        .table th:last-child, .table td:last-child {
-            width: 30%; 
-        }
-        textarea {
-            width: 100%; 
-            height: 100px; 
-        }
-        .img { width: 100px; }
-        .date-input { max-width: 150px; }
-        .btn-info:hover{
-            background-color: #0080ff;
-        }
-        .needs-validation{
-            width: 50%;
-        }
-        .photo{
-            width: 50%;
-            display: flex;
-            gap: 20px;
-        }
-    </style>
-</head>
-<body style="overflow-x: hidden;">
+
+@include('layouts.head', [
+    'pageTitle' => 'Twój profil - languageCourses',
+    'metaDescription' => 'Podgląd Twojego konta w languageCourses: dane, awatar i lista kursów, na które jesteś zapisany.',
+    'robots' => 'noindex, nofollow',
+])
+
+<body>
 @include('layouts.navbar')
 
-<div class="row mt-4 mb-4 text-center" style="text-align: center;">
-    <div class="col-12" style="    display: flex;
-    flex-direction: column;
-    align-items: center;">
-        <img src="{{ asset('storage/img/logo.png') }}" alt="Logo" class="img-fluid" style="max-width: 150px; margin-bottom: 20px; border-radius: 50">
-        <h1>Twój profil</h1>
-    </div>
-</div>
+<main id="main-content">
+    <div class="lc-shell">
+        @include('layouts.breadcrumbs', ['crumbs' => [['label' => 'Mój profil']]])
 
-@if (Auth::check())
-<div class="container mt-5 marginbig">
-    <div class="card">
-        <div class="card-header" style="padding: 20px;">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <div class="flex-grow-1 mb-3 mb-md-0">
-                    <h1>{{ Auth::user()->name }}</h1>
-                    <p><strong>Email:</strong> {{ Auth::user()->email }}</p>
-                    <p><strong>Adres:</strong> {{ Auth::user()->address }}</p>
-                    <div>
-                        <a href="{{ route('user.settings') }}" class="btn custom-btn btn-test">Edytuj dane</a>
-                        <a href="{{ route('user.cart') }}" class="btn custom-btn btn-test">Koszyk</a>
-                        <a href="{{ route('logout') }}" class="btn custom-btn btn-test">Wyloguj</a>
+        {{-- One <h1> per page: the page title. The user's name is a heading
+             inside the profile card, one level down. --}}
+        <h1>Twój profil</h1>
+
+        @include('layouts.session-error')
+        @include('layouts.validation-error')
+
+        @if (Auth::check())
+            <section class="lc-profile-head" aria-labelledby="profile-identity">
+                <img class="lc-avatar"
+                     src="{{ url(Auth::user()->avatar ?: 'storage/img/user.png') }}"
+                     alt="Awatar użytkownika {{ Auth::user()->name }}" loading="lazy">
+
+                <div>
+                    <h2 id="profile-identity">{{ Auth::user()->name }}</h2>
+                    <ul class="lc-meta-list">
+                        <li><strong>Email:</strong> {{ Auth::user()->email }}</li>
+                        @if (Auth::user()->address)
+                            <li><strong>Adres:</strong> {{ Auth::user()->address }}</li>
+                        @endif
+                    </ul>
+
+                    <div class="lc-profile-actions">
+                        <a href="{{ route('user.settings') }}" class="btn custom-btn">Edytuj dane</a>
+                        <a href="{{ route('user.cart') }}" class="btn lc-btn-secondary">Koszyk</a>
+                        <a href="{{ route('logout') }}" class="btn lc-btn-secondary">Wyloguj się</a>
                     </div>
                 </div>
-    
-                <div class="photo text-center">
-                    <img src="{{ url(Auth::user() ? Auth::user()->avatar : 'storage/img/user.png') }}" class="rounded-circle" height="100" alt="Portrait of a User" loading="lazy"/>
-                    <form method="POST" action="{{ route('user.update_avatar') }}" enctype="multipart/form-data" class="needs-validation mt-3" novalidate>
-                        @csrf
-                        @method('PUT')
-                        <div class="form-group mb-3">
-                            <label for="avatar" class="form-label">Zmień awatar</label>
-                            <input id="avatar" name="avatar" type="file" class="form-control" required>
-                        </div>
-                        <div class="text-center mb-3">
-                            <button type="submit" class="btn custom-btn">Zaktualizuj awatar</button>
-                        </div>
-                    </form> 
-                </div>
-            </div>
-        </div>
-    </div>    
-    <div class="card mt-4">
-        <div class="card-header" style="padding: 20px;">
-            <h2>Zapisane kursy</h2>
-        </div>
-        <div class="card-body">
-            @if($enrollments->isEmpty())
-                <p>Brak zapisanych kursów.</p>
-            @else
-                <div class="table-responsive"> 
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Zdjęcie</th>
-                                <th>Nazwa kursu</th>
-                                <th>Nauczyciel</th>
-                                <th>Data zapisu</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($enrollments as $enrollment)
+            </section>
+
+            <section aria-labelledby="avatar-heading" class="lc-form-card mb-4">
+                <h2 id="avatar-heading">Zmień awatar</h2>
+                <form method="POST" action="{{ route('user.update_avatar') }}"
+                      enctype="multipart/form-data" id="avatarForm" novalidate>
+                    @csrf
+                    @method('PUT')
+
+                    <div class="lc-field">
+                        <label for="avatar">Plik obrazu</label>
+                        <input id="avatar" name="avatar" type="file" accept="image/*"
+                               class="form-control @error('avatar') is-invalid @enderror" required
+                               aria-describedby="avatar-hint @error('avatar') avatar-error @enderror">
+                        <span class="lc-hint" id="avatar-hint">Obraz w formacie JPG, PNG lub WEBP.</span>
+                        @error('avatar')
+                            <span class="invalid-feedback" id="avatar-error">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <button type="submit" class="btn custom-btn">Zaktualizuj awatar</button>
+                </form>
+            </section>
+
+            <section aria-labelledby="enrollments-heading">
+                <h2 id="enrollments-heading">Zapisane kursy</h2>
+
+                @if ($enrollments->isEmpty())
+                    <div class="lc-empty">
+                        <h3>Nie masz jeszcze żadnych kursów</h3>
+                        <p>Kiedy zapiszesz się na kurs, pojawi się on na tej liście wraz z terminem zajęć.</p>
+                        <a href="{{ route('courses.index') }}" class="btn custom-btn">Przeglądaj kursy</a>
+                    </div>
+                @else
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <caption>Kursy, na które jesteś zapisany, wraz z datą zajęć i statusem zapisu.</caption>
+                            <thead>
                                 <tr>
-                                    <td><img src="{{ asset('storage/img/' . $enrollment->lessons->first()->course->path) }}" class="img-fluid img"></td>
-                                    <td>{{ $enrollment->lessons->first()->course->name }}</td>
-                                    <td>{{ $enrollment->lessons->first()->course->teacher->name }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($enrollment->lesson_date)->format('Y-m-d') }}</td>
-                                    <td>{{ ucfirst($enrollment->status) }}</td>
+                                    <th scope="col">Zdjęcie</th>
+                                    <th scope="col">Nazwa kursu</th>
+                                    <th scope="col">Nauczyciel</th>
+                                    <th scope="col">Data zajęć</th>
+                                    <th scope="col">Status</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-        </div>
+                            </thead>
+                            <tbody>
+                                @foreach ($enrollments as $enrollment)
+                                    @php
+                                        // An enrolment always has at least one lesson, but guard
+                                        // anyway so a data gap cannot 500 the profile page.
+                                        $course = optional($enrollment->lessons->first())->course;
+                                        $lessonDate = $enrollment->lesson_date
+                                            ? \Carbon\Carbon::parse($enrollment->lesson_date)
+                                            : null;
+                                    @endphp
+                                    <tr>
+                                        <td>
+                                            @if ($course)
+                                                <img src="{{ asset('storage/img/' . $course->path) }}"
+                                                     alt="" width="72" height="54" loading="lazy"
+                                                     style="object-fit: cover;">
+                                            @endif
+                                        </td>
+                                        <th scope="row">{{ $course->name ?? 'Kurs niedostępny' }}</th>
+                                        <td>{{ $course->teacher->name ?? 'Brak danych' }}</td>
+                                        <td>
+                                            @if ($lessonDate)
+                                                <time datetime="{{ $lessonDate->toDateString() }}">
+                                                    {{ $lessonDate->format('d.m.Y') }}
+                                                </time>
+                                            @else
+                                                Brak terminu
+                                            @endif
+                                        </td>
+                                        <td><span class="lc-status">{{ ucfirst($enrollment->status) }}</span></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </section>
+        @else
+            <div class="lc-empty">
+                <h2>Nie jesteś zalogowany</h2>
+                <p>Zaloguj się, aby uzyskać dostęp do swojego profilu i zapisanych kursów.</p>
+                <a href="{{ route('login') }}" class="btn custom-btn">Zaloguj się</a>
+            </div>
+        @endif
     </div>
-</div>
-@else
-    <div class="full-height">
-        <p class="text-large">Proszę się zalogować, aby uzyskać dostęp do profilu.</p>
-        <div class="text-center">
-            <a href="{{ route('login') }}" class="btn custom-btn">Zaloguj się</a>
-        </div>
-    </div>
-@endif
+</main>
 
 @include('layouts.footer', ['fixedBottom' => false])
+
 <script>
-    function toggleReviewForm(loanId) {
-        var form = document.getElementById('review-form-' + loanId);
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-    }
-</script>
-<script>
+    // Require a file before submitting the avatar form, reporting it as text.
     document.addEventListener('DOMContentLoaded', function () {
-        const form = document.querySelector('.needs-validation');
+        var form = document.getElementById('avatarForm');
+        if (!form) {
+            return;
+        }
+
+        var fileInput = document.getElementById('avatar');
+        var errorId = 'avatar-client-error';
+
         form.addEventListener('submit', function (event) {
-            const fileInput = document.getElementById('avatar');
-            let valid = true;
-    
+            var existing = document.getElementById(errorId);
+
             if (fileInput.files.length === 0) {
-                valid = false;
+                event.preventDefault();
+
+                if (!existing) {
+                    existing = document.createElement('span');
+                    existing.className = 'invalid-feedback';
+                    existing.id = errorId;
+                    fileInput.insertAdjacentElement('afterend', existing);
+                }
+                existing.textContent = 'Wybierz plik obrazu, aby zaktualizować awatar.';
+
                 fileInput.classList.add('is-invalid');
+                fileInput.setAttribute('aria-invalid', 'true');
+                fileInput.setAttribute('aria-describedby', 'avatar-hint ' + errorId);
+                fileInput.focus();
             } else {
                 fileInput.classList.remove('is-invalid');
-            }
-    
-            if (!valid) {
-                event.preventDefault(); 
-                event.stopPropagation();
+                fileInput.removeAttribute('aria-invalid');
+                fileInput.setAttribute('aria-describedby', 'avatar-hint');
+                if (existing) {
+                    existing.remove();
+                }
             }
         });
     });
-</script>    
+</script>
 </body>
 </html>

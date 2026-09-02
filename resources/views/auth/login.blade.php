@@ -1,108 +1,133 @@
 @include('layouts.html')
 
-@include('layouts.head', ['pageTitle' => 'languageCourses - Logowanie'])
-<head>
-    <style>
-        .marginbig {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 81vh;
-        }
-        .marginbig {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 81vh;
-        }
-        .custom-btn {
-            background-color: gray;
-            color: black;
-            border: none; 
-        }
-        .custom-btn:hover {
-            background-color: lightgreen;
-            color: white;
-        }
-    </style>
-</head>
+@include('layouts.head', [
+    'pageTitle' => 'Logowanie - languageCourses',
+    'metaDescription' => 'Zaloguj się do languageCourses, aby zarządzać swoimi kursami, koszykiem i terminami zajęć.',
+    // Account pages carry no value in the index.
+    'robots' => 'noindex, nofollow',
+])
+
 <body>
 @include('layouts.navbar')
 
-<div class="container mt-5 mb-5 marginbig">
-    @include('layouts.session-error')
-
-    <div class="row mt-4 mb-4 text-center">
-        <div class="col-12">
-            <img src="{{ asset('storage/img/logo.png') }}" alt="Logo" class="img-fluid" style="max-width: 150px; margin-bottom: 20px; border-radius: 50">
-            <h1>Zaloguj się</h1>
-        </div>
-    </div>
-
-    @include('layouts.validation-error')
-
-    <div class="row d-flex justify-content-center">
-        <div class="col-10 col-sm-10 col-md-6 col-lg-4">
-            <form method="POST" action="{{ route('login.authenticate') }}" class="needs-validation" novalidate>
-                @csrf
-                <div class="form-group mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input id="email" name="email" type="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" required autofocus>
-                    @error('email')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+<main id="main-content">
+    <div class="lc-shell">
+        <div class="lc-auth">
+            <div class="lc-auth-card">
+                <div class="lc-auth-head">
+                    <img src="{{ asset('storage/img/logo.png') }}" alt="Logo languageCourses">
+                    <h1>Zaloguj się</h1>
+                    <p>Wpisz dane swojego konta, aby kontynuować.</p>
                 </div>
-                <div class="form-group mb-3">
-                    <label for="password" class="form-label">Hasło</label>
-                    <input id="password" name="password" type="password" class="form-control @error('password') is-invalid @enderror" required>
-                    @error('password')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-                <div class="form-group mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="remember" name="remember" value="1">
-                    <label class="form-check-label" for="remember">Zapamiętaj mnie</label>
-                </div>
-                
-                <div class="text-center mt-4 mb-4">
+
+                @include('layouts.session-error')
+                @include('layouts.validation-error')
+
+                <form method="POST" action="{{ route('login.authenticate') }}" id="loginForm" novalidate>
+                    @csrf
+
+                    <div class="lc-field">
+                        <label for="email">Adres e-mail</label>
+                        <input id="email" name="email" type="email" autocomplete="email"
+                               class="form-control @error('email') is-invalid @enderror"
+                               value="{{ old('email') }}" required autofocus
+                               @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
+                        @error('email')
+                            <span class="invalid-feedback" id="email-error">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="lc-field">
+                        <label for="password">Hasło</label>
+                        <input id="password" name="password" type="password" autocomplete="current-password"
+                               class="form-control @error('password') is-invalid @enderror" required
+                               @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
+                        @error('password')
+                            <span class="invalid-feedback" id="password-error">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="form-check lc-field">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember" value="1"
+                               @checked(old('remember'))>
+                        <label class="form-check-label" for="remember">Zapamiętaj mnie</label>
+                    </div>
+
                     <button class="btn custom-btn" type="submit">Zaloguj się</button>
-                </div>
-                <p>Nie masz konta? <a href="{{ route('register') }}">Zarejestruj się</a></p>
-            </form>
+                </form>
+
+                <p class="lc-auth-foot">
+                    Nie masz konta? <a href="{{ route('register') }}">Zarejestruj się</a>
+                </p>
+            </div>
         </div>
     </div>
-</div>
+</main>
 
+@include('layouts.footer', ['fixedBottom' => false])
 
-    @include('layouts.footer', ['fixedBottom' => false])
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const loginForm = document.getElementById('loginForm');
-            loginForm.addEventListener('submit', function (event) {
-                let valid = true;
-                const email = document.getElementById('email');
-                const password = document.getElementById('password');
-        
-                if (!email.value.includes('@') || !email.value.includes('.')) {
-                    valid = false;
-                    email.classList.add('is-invalid');
-                } else {
-                    email.classList.remove('is-invalid');
+<script>
+    // Client-side pre-check. Server-side validation remains authoritative; this
+    // only saves a round trip and reports problems through the same aria-invalid
+    // / aria-describedby wiring the server-rendered errors use.
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.getElementById('loginForm');
+        if (!form) {
+            return;
+        }
+
+        var email = document.getElementById('email');
+        var password = document.getElementById('password');
+
+        function setError(field, message) {
+            var errorId = field.id + '-client-error';
+            var existing = document.getElementById(errorId);
+
+            if (message) {
+                field.classList.add('is-invalid');
+                field.setAttribute('aria-invalid', 'true');
+                if (!existing) {
+                    existing = document.createElement('span');
+                    existing.className = 'invalid-feedback';
+                    existing.id = errorId;
+                    field.insertAdjacentElement('afterend', existing);
                 }
-        
-                if (password.value.length < 8) {
-                    valid = false;
-                    password.classList.add('is-invalid');
-                } else {
-                    password.classList.remove('is-invalid');
+                existing.textContent = message;
+                field.setAttribute('aria-describedby', errorId);
+            } else {
+                field.classList.remove('is-invalid');
+                field.removeAttribute('aria-invalid');
+                if (existing) {
+                    existing.remove();
+                    field.removeAttribute('aria-describedby');
                 }
-        
-                if (!valid) {
-                    event.preventDefault(); 
-                }
-            });
+            }
+        }
+
+        form.addEventListener('submit', function (event) {
+            var firstInvalid = null;
+
+            if (!email.value.includes('@') || !email.value.includes('.')) {
+                setError(email, 'Podaj poprawny adres e-mail.');
+                firstInvalid = firstInvalid || email;
+            } else {
+                setError(email, null);
+            }
+
+            if (password.value.length < 8) {
+                setError(password, 'Hasło musi mieć co najmniej 8 znaków.');
+                firstInvalid = firstInvalid || password;
+            } else {
+                setError(password, null);
+            }
+
+            if (firstInvalid) {
+                event.preventDefault();
+                // Move focus to the first problem so the error is announced.
+                firstInvalid.focus();
+            }
         });
-    </script>
-        
+    });
+</script>
 </body>
 </html>
