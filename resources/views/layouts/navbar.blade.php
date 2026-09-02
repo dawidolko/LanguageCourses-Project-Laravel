@@ -32,7 +32,7 @@
                     <a class="nav-link dropdown-toggle" href="#" id="coursesDropdown" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">Rodzaje</a>
                     <ul class="dropdown-menu" aria-labelledby="coursesDropdown">
-                        @forelse ($courses as $course)
+                        @forelse ($navCourses as $course)
                             <li>
                                 <a class="dropdown-item" href="{{ route('courses.show', ['id' => $course->id]) }}">{{ $course->name }}</a>
                             </li>

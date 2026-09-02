@@ -52,9 +52,17 @@ class AppServiceProvider extends ServiceProvider
             return $user->role_id == 1;
         });
 
-        // Przekazuj kursy do wszystkich widoków
+        /*
+         * Lista dla nawigacji idzie pod wlasna nazwa `navCourses`.
+         *
+         * Wczesniej ten kompozytor wstrzykiwal `$courses` do KAZDEGO widoku i
+         * robil to PO kontrolerze, wiec podmienial paginator z
+         * `CoursesController@index` na zwykla kolekcje. Widok wolal potem
+         * `->total()`, ktorego kolekcja nie ma — strona `/courses` konczyla sie
+         * bledem 500.
+         */
         ViewFacade::composer('*', function ($view) {
-            $view->with('courses', Course::all());
+            $view->with('navCourses', Course::query()->orderBy('name')->get());
         });
     }
 }
