@@ -1,85 +1,85 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Inicjalizacja projektu LanguageCourses..."
+echo "🚀 Initialising project LanguageCourses..."
 
-# Kopiowanie .env jeśli nie istnieje
+# Copy .env if it does not exist
 if [ ! -f "/var/www/html/.env" ]; then
-    echo "📋 Kopiowanie pliku .env..."
+    echo "📋 Copying the .env file..."
     cp /var/www/html/.tools/docker/.env.docker /var/www/html/.env
 fi
 
-# Instalacja zależności Composer
-# Sprawdzamy `autoload.php`, nie sam katalog: przerwana instalacja zostawia
-# pusty `vendor/`, ktory przechodzil ten warunek jako "gotowe" — artisan
-# wywalal sie potem na brakujacym autoloaderze i kontener restartowal w kolko.
+# Install Composer dependencies.
+# Check `autoload.php`, not the directory itself: an interrupted install leaves
+# an empty `vendor/` that used to pass this check as "ready", after which
+# artisan crashed on the missing autoloader and the container restart-looped.
 if [ ! -f "/var/www/html/vendor/autoload.php" ]; then
-    echo "📦 Instalacja zależności PHP (Composer)..."
+    echo "📦 Installing PHP dependencies (Composer)..."
     composer install --no-interaction --optimize-autoloader
 else
-    echo "✅ Zależności PHP już zainstalowane"
+    echo "✅ PHP dependencies already installed"
 fi
 
-# Instalacja zależności NPM i budowanie assets
+# Install NPM dependencies and build assets
 if [ ! -d "/var/www/html/node_modules/vite" ]; then
-    echo "📦 Instalacja zależności Node.js..."
+    echo "📦 Installing Node.js dependencies..."
     npm install
-    echo "🔨 Budowanie assets..."
+    echo "🔨 Building assets..."
     npm run build
 else
-    echo "✅ Zależności Node.js już zainstalowane"
+    echo "✅ Node.js dependencies already installed"
 fi
 
-# Generowanie klucza aplikacji jeśli nie istnieje
+# Generate the application key if it does not exist
 if ! grep -q "APP_KEY=base64:" /var/www/html/.env; then
-    echo "🔑 Generowanie klucza aplikacji..."
+    echo "🔑 Generating the application key..."
     php artisan key:generate --no-interaction
 else
-    echo "✅ Klucz aplikacji już istnieje"
+    echo "✅ Application key already exists"
 fi
 
-# Generowanie obrazów kursów
-echo "🖼️  Generowanie obrazów kursów..."
-php /var/www/html/.tools/docker/generate-images.php || echo "⚠️  Ostrzeżenie: Problem z generowaniem obrazów, kontynuuję..."
+# Generate course images
+echo "🖼️  Generating course images..."
+php /var/www/html/.tools/docker/generate-images.php || echo "⚠️  Warning: problem generating images, continuing..."
 
-# Tworzenie symlinku storage
-echo "🔗 Tworzenie symlinku storage..."
-php artisan storage:link --force 2>/dev/null || echo "✅ Symlink storage już istnieje"
+# Create the storage symlink
+echo "🔗 Creating the storage symlink..."
+php artisan storage:link --force 2>/dev/null || echo "✅ Storage symlink already exists"
 
-# Czekanie na MySQL
-echo "⏳ Oczekiwanie na bazę danych..."
+# Wait for MySQL
+echo "⏳ Waiting for the database..."
 for i in {1..30}; do
     if php artisan db:show 2>/dev/null | grep -q "MySQL"; then
-        echo "✅ Baza danych dostępna"
+        echo "✅ Database available"
         break
     fi
-    echo "   Próba $i/30 - czekam 2s..."
+    echo "   Attempt $i/30 - waiting 2s..."
     sleep 2
 done
 
-# Uruchamianie migracji
-echo "🗄️  Uruchamianie migracji..."
+# Run migrations
+echo "🗄️  Running migrations..."
 php artisan migrate --force --no-interaction
 
-# Sprawdzenie czy w bazie są już dane
+# Check whether the database already has data
 USER_COUNT=$(php artisan tinker --execute="echo \App\Models\User::count();" 2>/dev/null | tail -1 | tr -d '\n\r ' || echo "0")
 
 if [ "$USER_COUNT" = "0" ] || [ -z "$USER_COUNT" ]; then
-    echo "📊 Wypełnianie bazy danymi testowymi..."
+    echo "📊 Seeding the database with test data..."
     php artisan db:seed --force --no-interaction
 else
-    echo "✅ Baza danych już zawiera dane (użytkowników: $USER_COUNT)"
+    echo "✅ Database already has data (users: $USER_COUNT)"
 fi
 
-# Nadawanie uprawnień
-echo "🔐 Nadawanie uprawnień..."
+# Set permissions
+echo "🔐 Setting permissions..."
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache 2>/dev/null || true
 chmod -R 755 /var/www/html/storage
 chmod -R 755 /var/www/html/bootstrap/cache
 
-echo "✨ Projekt LanguageCourses gotowy!"
-echo "📍 Aplikacja dostępna na: http://localhost:8001"
+echo "✨ Projekt LanguageCourses ready!"
+echo "📍 Application available at: http://localhost:8001"
 
-# Uruchomienie supervisord
-echo "🚀 Uruchamianie serwera..."
+# Start supervisord
+echo "🚀 Starting the server..."
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

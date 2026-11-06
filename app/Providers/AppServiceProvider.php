@@ -29,12 +29,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         /*
-         * Adresy assetow budujemy z APP_URL, nie z naglowka zadania.
+         * Asset URLs are built from APP_URL, not from the request header.
          *
-         * W kontenerze nginx slucha na porcie 80, a 8000/8001 to dopiero
-         * mapowanie Dockera — PHP widzi wiec "localhost" bez portu i `asset()`
-         * generowal linki do http://localhost/css/..., czyli w pustke. Efekt:
-         * strona ladowala sie bez zadnych styli.
+         * In the container nginx listens on port 80 and 8000/8001 are only Docker
+         * mappings, so PHP sees "localhost" without a port and `asset()` generated
+         * links to http://localhost/css/..., which lead nowhere. The result: the page
+         * loaded without any styles.
          */
         if ($url = config('app.url')) {
             URL::forceRootUrl($url);
@@ -53,13 +53,12 @@ class AppServiceProvider extends ServiceProvider
         });
 
         /*
-         * Lista dla nawigacji idzie pod wlasna nazwa `navCourses`.
+         * The navigation list goes under its own name, `navCourses`.
          *
-         * Wczesniej ten kompozytor wstrzykiwal `$courses` do KAZDEGO widoku i
-         * robil to PO kontrolerze, wiec podmienial paginator z
-         * `CoursesController@index` na zwykla kolekcje. Widok wolal potem
-         * `->total()`, ktorego kolekcja nie ma — strona `/courses` konczyla sie
-         * bledem 500.
+         * This composer used to inject `$courses` into EVERY view, AFTER the
+         * controller, replacing the paginator from `CoursesController@index` with a
+         * plain collection. The view then called `->total()`, which a collection does
+         * not have, and `/courses` ended in a 500 error.
          */
         ViewFacade::composer('*', function ($view) {
             $view->with('navCourses', Course::query()->orderBy('name')->get());

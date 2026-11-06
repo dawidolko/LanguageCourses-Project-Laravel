@@ -78,7 +78,10 @@ class AuthController extends Controller
             'name' => $validatedData['name'],
             'email' => $validatedData['email'],
             'password' => Hash::make($validatedData['password']),
-            'role_id' => 2 // Przypisuje nowym użytkownikom rolę klienta, ponieważ rola nr.1 to admin.
+            /*
+             * Assigns new users the customer role, because role 1 is admin.
+             */
+            'role_id' => 2
         ]);
 
         Auth::login($user);

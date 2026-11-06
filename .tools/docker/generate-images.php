@@ -21,7 +21,9 @@ $courses = [
 
 $baseDir = '/var/www/html/storage/app/public/img/courses';
 
-// Utwórz katalogi jeśli nie istnieją
+/*
+ * Create directories if they do not exist
+ */
 if (!is_dir($baseDir)) {
     mkdir($baseDir, 0755, true);
 }
@@ -29,37 +31,58 @@ if (!is_dir($baseDir)) {
 foreach ($courses as $course) {
     $filePath = $baseDir . '/' . $course['file'];
     
-    // Generuj tylko jeśli plik nie istnieje
+    /*
+     * Generate only if the file does not exist
+     */
     if (!file_exists($filePath)) {
-        // Utwórz obrazek 800x600
+        /*
+         * Create an 800x600 image
+         */
         $image = imagecreatetruecolor(800, 600);
         
-        // Wypełnij kolorem tła
+        /*
+         * Fill with the background colour
+         */
         $bgColor = imagecolorallocate($image, $course['color'][0], $course['color'][1], $course['color'][2]);
         imagefill($image, 0, 0, $bgColor);
         
-        // Dodaj tekst (biały)
+        /*
+         * Add text (white)
+         */
         $textColor = imagecolorallocate($image, 255, 255, 255);
         
-        // Gradient effect - prostokąt na dole
+        /*
+         * Gradient effect: rectangle at the bottom
+         */
         $overlayColor = imagecolorallocatealpha($image, 0, 0, 0, 50);
         imagefilledrectangle($image, 0, 450, 800, 600, $overlayColor);
         
-        // Nazwa języka (duża czcionka) - używamy imagestring dla prostoty
+        /*
+         * Language name (large font), using imagestring for simplicity
+         */
         $text = strtoupper($course['name']);
-        $textX = (800 - (strlen($text) * 18)) / 2;  // Centruj tekst (przybliżona szerokość)
+        /*
+         * Centre the text (approximate width)
+         */
+        $textX = (800 - (strlen($text) * 18)) / 2;
         $textY = 500;
         
-        // Narysuj tekst 3 razy (efekt pogrubienia)
+        /*
+         * Draw the text 3 times for a bold effect
+         */
         imagestring($image, 5, $textX, $textY, $text, $textColor);
         imagestring($image, 5, $textX + 1, $textY, $text, $textColor);
         imagestring($image, 5, $textX, $textY + 1, $text, $textColor);
         
-        // Ikona książki (prosty symbol)
+        /*
+         * Book icon (simple symbol)
+         */
         $iconColor = imagecolorallocatealpha($image, 255, 255, 255, 30);
         imagefilledrectangle($image, 300, 200, 500, 380, $iconColor);
         
-        // Zapisz obrazek
+        /*
+         * Save the image
+         */
         imagejpeg($image, $filePath, 90);
         
         imagedestroy($image);
@@ -68,4 +91,4 @@ foreach ($courses as $course) {
     }
 }
 
-echo "✅ Wszystkie obrazy kursów zostały wygenerowane!\n";
+echo "✅ All course images have been generated!\n";

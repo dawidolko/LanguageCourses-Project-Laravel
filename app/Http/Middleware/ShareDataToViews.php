@@ -10,12 +10,12 @@ class ShareDataToViews
     public function handle(Request $request, Closure $next)
     {
         /*
-         * Wspoldzielona lista idzie pod wlasna nazwa, nie jako `$courses`.
+         * The shared list goes under its own name, not `$courses`.
          *
-         * `view()->share()` nadpisuje zmienne przekazane przez kontroler, wiec
-         * paginator z `CoursesController@index` byl podmieniany na zwykla
-         * kolekcje — a ta nie ma metod `total()`, `firstItem()` czy `links()`.
-         * Strona `/courses` wywalala sie przez to bledem 500.
+         * `view()->share()` overrides variables passed by the controller, so the
+         * paginator from `CoursesController@index` was replaced by a plain collection,
+         * which has no `total()`, `firstItem()` or `links()` methods. The `/courses`
+         * page crashed with a 500 error because of that.
          */
         view()->share('navCourses', Course::query()->orderBy('name')->get());
         return $next($request);
