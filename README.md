@@ -45,6 +45,12 @@ An enrolment is the centre of the application. It belongs to a user, points at a
 
 ---
 
+## 🎬 Demo
+
+[![Watch the demo on YouTube](https://img.youtube.com/vi/Rjnw00AN1Xw/hqdefault.jpg)](https://youtu.be/Rjnw00AN1Xw)
+
+---
+
 ## 🛠️ Technology Stack
 
 | Technology       | Version | Role                                                          |
